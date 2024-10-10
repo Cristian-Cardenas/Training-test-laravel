@@ -16,6 +16,8 @@ Route::post('/create_worker/crear_contenidos', [Create_workerController::class, 
 Route::post('/create_worker/crear_evaluaciones', [Create_workerController::class, 'crear_evaluaciones'])->name('crear_evaluaciones');
 Route::post('/create_worker/crear_preguntas', [Create_workerController::class, 'crear_preguntas'])->name('crear_preguntas');
 Route::post('/create_worker/crear_respuestas', [Create_workerController::class, 'crear_respuestas'])->name('crear_respuestas');
+Route::post('/create_worker/respuestas', [Create_workerController::class, 'respuestas'])->name('respuestas');
+
 
 
 

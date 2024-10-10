@@ -85,4 +85,39 @@ class Create_workerController extends Controller
         // Redirigir a la vista index para mostrar nuevamente la lista actualizada
         return redirect()->route('create_worker.index');
     }
+    public function respuestas(Request $request)
+    {
+        $request->validate([
+            'id_trabajador' => 'required|exists:trabajadores,id_trabajador',
+            'id_c_pregunta' => 'required|exists:crear_preguntas,id_c_pregunta',
+            'id_c_respuesta' => 'required|exists:crear_respuestas,id_c_respuesta',
+            'id_evaluacion' => 'required|exists:evaluaciones,id_evaluacion',
+
+        ]);
+
+        $id_c_respuesta = $request->id_c_respuesta;
+
+        $respuesta_seleccionada = crear_respuestas::find($id_c_respuesta);
+        if ($respuesta_seleccionada) {
+
+            $validacion = $respuesta_seleccionada->validacion ?? false;
+            // dd([
+            //     'id_trabajador' => $request->id_trabajador,
+            //     'id_c_pregunta' => $request->id_c_pregunta,
+            //     'id_c_respuesta' => $id_c_respuesta,
+            //     'es_correcta' => $validacion,
+            // ]);
+            respuestas::create([
+                'id_trabajador' => $request->id_trabajador,
+                'id_c_pregunta' => $request->id_c_pregunta,
+                'id_c_respuesta' => $id_c_respuesta,
+                'id_evaluacion' => $request->id_evaluacion,
+                'es_correcta' => $validacion,  
+            ]);
+
+            return redirect()->route('create_worker.index')->with('success', 'Respuesta guardada exitosamente.');
+        } else {
+            return redirect()->back()->withErrors('La respuesta seleccionada no es válida.');
+        }
+    }
 }
