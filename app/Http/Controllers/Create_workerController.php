@@ -112,12 +112,37 @@ class Create_workerController extends Controller
                 'id_c_pregunta' => $request->id_c_pregunta,
                 'id_c_respuesta' => $id_c_respuesta,
                 'id_evaluacion' => $request->id_evaluacion,
-                'es_correcta' => $validacion,  
+                'es_correcta' => $validacion,
             ]);
 
             return redirect()->route('create_worker.index')->with('success', 'Respuesta guardada exitosamente.');
         } else {
             return redirect()->back()->withErrors('La respuesta seleccionada no es válida.');
         }
+    }
+
+    public function getContenidos($id)
+    {
+        $contenidos = contenidos::where('id_curso', $id)->get();
+        if ($contenidos->isEmpty()) {
+            return response()->json(['message' => 'No contents found'], 200);
+        }
+        return response()->json($contenidos);
+    }
+    public function getEvaluaciones($id)
+    {
+        $evaluaciones = evaluaciones::where('id_contenido', $id)->get();
+        if ($evaluaciones->isEmpty()) {
+            return response()->json(['message' => 'No contents found'], 200);
+        }
+        return response()->json($evaluaciones);
+    }
+    public function get_id_c_pregunta($id)
+    {
+        $id_c_pregunta = crear_preguntas::where('id_evaluacion', $id)->get();
+        if ($id_c_pregunta->isEmpty()) {
+            return response()->json(['message' => 'No contents found'], 200);
+        }
+        return response()->json($id_c_pregunta);
     }
 }

@@ -190,7 +190,7 @@
                                     <th>Material</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="contenidoBody">
                                 @foreach ($contenidos as $contenido)
                                     <tr>
                                         <td>{{ $contenido->id_contenido }}</td>
@@ -220,7 +220,7 @@
                             <label class="active">Limite de intentos</label>
                             <input name="limite_intentos" type="text" class="validate form-control">
                         </div>
-                        <select name="id_contenido" class="form-control" required>
+                        <select name="id_contenido" id="contenidoSelect" class="form-control" required>
                             <option value="">Selecciona un contenido a evaluar</option>
                             @foreach ($contenidos as $contenido)
                                 <option value="{{ $contenido->id_contenido }}">{{ $contenido->titulo_contenido }}
@@ -246,7 +246,7 @@
                                     <th>Fecha limite</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="evaluacionBody">
                                 @foreach ($evaluaciones as $evaluacion)
                                     <tr>
                                         <td>{{ $evaluacion->id_evaluacion }}</td>
@@ -272,7 +272,7 @@
                 <div class="d-flex container">
                     <form class="m-5 col" action="{{ route('crear_preguntas') }}" method="post">
                         {{ csrf_field() }}
-                        <select name="id_evaluacion" class="form-control" required>
+                        <select name="id_evaluacion" id="evaluacionSelect" class="form-control" required>
                             <option value="">Selecciona una evaluacion</option>
                             @foreach ($evaluaciones as $evaluacion)
                                 <option value="{{ $evaluacion->id_evaluacion }}">{{ $evaluacion->id_evaluacion }}
@@ -298,7 +298,7 @@
                                     <th>Pregunta de evaluacion </th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="c_preguntaBody">
                                 @foreach ($crear_preguntas as $crear_pregunta)
                                     <tr>
                                         <td>{{ $crear_pregunta->id_c_pregunta }}</td>
@@ -463,47 +463,131 @@
 
 </body>
 <script>
-    $(document).ready(function() {
-        $('#cursoSelect').change(function() {
-            var cursoId = $(this).val();
-            if (cursoId) {
-                $.ajax({
-                    url: "{{ route('obtener_contenidos') }}",
-                    type: "GET",
-                    data: {
-                        id_curso: cursoId
-                    },
-                    success: function(data) {
-                        var tbody = $('#contenidosTable tbody');
-                        tbody.empty();
-                        if (data.length > 0) {
-                            $.each(data, function(index, contenido) {
-                                tbody.append('<tr>' +
-                                    '<td>' + contenido.id_contenido + '</td>' +
-                                    '<td>' + contenido.id_curso + '</td>' +
-                                    '<td>' + contenido.titulo_contenido +
-                                    '</td>' +
-                                    '<td>' + contenido.material + '</td>' +
-                                    '</tr>');
-                            });
-                        } else {
-                            tbody.append(
-                                '<tr><td colspan="4" class="text-center">No hay contenidos disponibles.</td></tr>'
-                                );
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error(error);
+    document.getElementById('cursoSelect').addEventListener('change', function() {
+        const cursoId = this.value;
+        if (cursoId) {
+            // Realiza una solicitud AJAX para obtener los contenidos del curso
+            fetch(`/new-project/public/create_worker/${cursoId}/contenidos`) // Usar el cursoId en lugar de "id"
+                .then(response => {
+                    // console.log(response); 
+                    return response.json();
+                })
+                
+                .then(data => {
+                    console.log('Datos recibidos:', data);
+                    const contenidoBody = document.getElementById('contenidoBody');
+                    contenidoBody.innerHTML = ''; // Limpiar tabla anterior
+
+                    if (data.length > 0) {
+                        // Iterar sobre los contenidos obtenidos y agregarlos a la tabla
+                        data.forEach(contenido => {
+                            const row = `
+                                <tr>
+                                    <td>${contenido.id_contenido}</td>
+                                    <td>${contenido.id_curso}</td>
+                                    <td>${contenido.titulo_contenido}</td>
+                                    <td>${contenido.material}</td>
+                                </tr>
+                            `;
+                            contenidoBody.innerHTML += row;
+                        });
+                    } else {
+                        // Si no hay contenidos, muestra un mensaje en la tabla
+                        contenidoBody.innerHTML = `
+                            <tr>
+                                <td colspan="4" class="text-center">No hay contenidos disponibles para este curso.</td>
+                            </tr>
+                        `;
                     }
-                });
-            } else {
-                $('#contenidosTable tbody').empty(); // Limpiar la tabla si no hay curso seleccionado
-                $('#contenidosTable tbody').append(
-                    '<tr><td colspan="4" class="text-center">No hay contenidos disponibles.</td></tr>'
-                    );
-            }
-        });
+                })
+                .catch(error => console.error('Error al obtener los contenidos:', error));
+        } else {
+            // Si no se selecciona un curso, limpia la tabla
+            document.getElementById('contenidoBody').innerHTML = '';
+        }
+    });
+    
+    document.getElementById('contenidoSelect').addEventListener('change', function() {
+        const contenidoId = this.value;
+        if (contenidoId) {
+            fetch(`/new-project/public/create_worker/${contenidoId}/evaluaciones`) 
+                .then(response => {
+                    // console.log(response); 
+                    return response.json();
+                })
+                
+                .then(data => {
+                    console.log('Datos recibidos:', data);
+                    const evaluacionBody = document.getElementById('evaluacionBody');
+                    evaluacionBody.innerHTML = ''; // Limpiar tabla anterior
+
+                    if (data.length > 0) {
+                        data.forEach(evaluacion => {
+                            const row = `
+                                <tr>
+                                    <td>${evaluacion.id_evaluacion}</td>
+                                    <td>${evaluacion.id_contenido}</td>
+                                    <td>${evaluacion.limite_intentos}</td>
+                                    <td>${evaluacion.fecha_limite}</td>
+                                </tr>
+                            `;
+                            evaluacionBody.innerHTML += row;
+                        });
+                    } else {
+                        evaluacionBody.innerHTML = `
+                            <tr>
+                                <td colspan="4" class="text-center">No hay contenidos disponibles para este curso.</td>
+                            </tr>
+                        `;
+                    }
+                })
+                .catch(error => console.error('Error al obtener los contenidos:', error));
+        } else {
+            // Si no se selecciona un curso, limpia la tabla
+            document.getElementById('evaluacionBody').innerHTML = '';
+        }
+    });
+
+    document.getElementById('evaluacionSelect').addEventListener('change', function() {
+        const evaluacionId = this.value;
+        if (evaluacionId) {
+            fetch(`/new-project/public/create_worker/${evaluacionId}/crear_preguntas`) 
+                .then(response => {
+                    // console.log(response); 
+                    return response.json();
+                })
+                
+                .then(data => {
+                    console.log('Datos recibidos:', data);
+                    const c_preguntaBody = document.getElementById('c_preguntaBody');
+                    c_preguntaBody.innerHTML = ''; // Limpiar tabla anterior
+
+                    if (data.length > 0) {
+                        data.forEach(crear_pregunta => {
+                            const row = `
+                                <tr>
+                                    <td>${crear_pregunta.id_c_pregunta}</td>
+                                    <td>${crear_pregunta.id_evaluacion}</td>
+                                    <td>${crear_pregunta.pregunta}</td>
+                                </tr>
+                            `;
+                            c_preguntaBody.innerHTML += row;
+                        });
+                    } else {
+                        c_preguntaBody.innerHTML = `
+                            <tr>
+                                <td colspan="4" class="text-center">No hay contenidos disponibles para este curso.</td>
+                            </tr>
+                        `;
+                    }
+                })
+                .catch(error => console.error('Error al obtener los contenidos:', error));
+        } else {
+            // Si no se selecciona un curso, limpia la tabla
+            document.getElementById('c_preguntaBody').innerHTML = '';
+        }
     });
 </script>
+
 
 </html>
