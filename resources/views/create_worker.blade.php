@@ -220,8 +220,8 @@
                             <label class="active">Limite de intentos</label>
                             <input name="limite_intentos" type="text" class="validate form-control">
                         </div>
+                        <option value="">Selecciona un contenido a evaluar</option>
                         <select name="id_contenido" id="contenidoSelect" class="form-control" required>
-                            <option value="">Selecciona un contenido a evaluar</option>
                             @foreach ($contenidos as $contenido)
                                 <option value="{{ $contenido->id_contenido }}">{{ $contenido->titulo_contenido }}
                                 </option>
@@ -325,7 +325,7 @@
                         {{ csrf_field() }}
                         <label class="active">Selecciona una Pregunta</label>
 
-                        <select name="id_c_pregunta" class="form-control" required>
+                        <select name="id_c_pregunta" id="preguntaSelect" class="form-control" required>
                             <option value="">Selecciona una pregunta</option>
                             @foreach ($crear_preguntas as $crear_pregunta)
                                 <option value="{{ $crear_pregunta->id_c_pregunta }}">{{ $crear_pregunta->pregunta }}
@@ -357,7 +357,7 @@
 
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="c_respuestaBody">
                                 @foreach ($crear_respuestas as $crear_respuesta)
                                     <tr>
                                         <td>{{ $crear_respuesta->id_c_respuesta }}</td>
@@ -385,7 +385,7 @@
                     <form class="m-5 col" action="{{ route('respuestas') }}" method="post">
                         {{ csrf_field() }}
                         <label class="active">Selecciona tu nombre</label>
-                        <select name="id_trabajador" class="form-control" required>
+                        <select name="id_trabajador" id="trabajadorSelect" class="form-control" required>
                             <option value="">- - -</option>
                             @foreach ($trabajadores as $trabajador)
                                 <option value="{{ $trabajador->id_trabajador }}">{{ $trabajador->nombre_trabajador }}
@@ -393,7 +393,7 @@
                             @endforeach
                         </select>
                         <label class="active">Selecciona tu evaluacion</label>
-                        <select name="id_evaluacion" class="form-control" required>
+                        <select name="id_evaluacion" id="evaluacionSelect" class="form-control" required>
                             <option value="">- - -</option>
                             @foreach ($evaluaciones as $evaluacion)
                                 <option value="{{ $evaluacion->id_evaluacion }}">{{ $evaluacion->id_evaluacion }}
@@ -435,7 +435,7 @@
 
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="respuestaBody">
                                     @foreach ($respuestas as $respuesta)
                                         <tr>
                                             <td>{{ $respuesta->id_respuesta }}</td>
@@ -585,6 +585,90 @@
         } else {
             // Si no se selecciona un curso, limpia la tabla
             document.getElementById('c_preguntaBody').innerHTML = '';
+        }
+    });
+    
+    document.getElementById('preguntaSelect').addEventListener('change', function() {
+        const preguntaId = this.value;
+        if (preguntaId) {
+            fetch(`/new-project/public/create_worker/${preguntaId}/crear_respuestas`) 
+                .then(response => {
+                    // console.log(response); 
+                    return response.json();
+                })
+                
+                .then(data => {
+                    console.log('Datos recibidos:', data);
+                    const c_respuestaBody = document.getElementById('c_respuestaBody');
+                    c_respuestaBody.innerHTML = ''; // Limpiar tabla anterior
+
+                    if (data.length > 0) {
+                        data.forEach(crear_respuesta => {
+                            const row = `
+                                <tr>
+                                    <td>${crear_respuesta.id_c_respuesta}</td>
+                                    <td>${crear_respuesta.id_c_pregunta}</td>
+                                    <td>${crear_respuesta.c_respuesta}</td>
+                                    <td>${crear_respuesta.validacion}</td>
+                                </tr>
+                            `;
+                            c_respuestaBody.innerHTML += row;
+                        });
+                    } else {
+                        c_respuestaBody.innerHTML = `
+                            <tr>
+                                <td colspan="4" class="text-center">No hay contenidos disponibles para este curso.</td>
+                            </tr>
+                        `;
+                    }
+                })
+                .catch(error => console.error('Error al obtener los contenidos:', error));
+        } else {
+            // Si no se selecciona un curso, limpia la tabla
+            document.getElementById('c_respuestaBody').innerHTML = '';
+        }
+    });
+    
+    document.getElementById('trabajadorSelect').addEventListener('change', function() {
+        const trabajadorId = this.value;
+        if (trabajadorId) {
+            fetch(`/new-project/public/create_worker/${trabajadorId}/trabajadores`) 
+                .then(response => {
+                    // console.log(response); 
+                    return response.json();
+                })
+                
+                .then(data => {
+                    console.log('Datos recibidos:', data);
+                    const respuestaBody = document.getElementById('respuestaBody');
+                    respuestaBody.innerHTML = ''; // Limpiar tabla anterior
+
+                    if (data.length > 0) {
+                        data.forEach(respuesta => {
+                            const row = `
+                                <tr>
+                                    <td>${respuesta.id_respuesta}</td>
+                                    <td>${respuesta.id_trabajador}</td>
+                                    <td>${respuesta.id_evaluacion}</td>
+                                    <td>${respuesta.pregunta ? respuesta.pregunta.pregunta : 'Sin pregunta'}</td>
+                                    <td>${respuesta.respuesta ? respuesta.respuesta.c_respuesta : 'Sin respuesta'}</td>
+                                    <td>${respuesta.es_correcta ? 'Correcta' : 'Incorrecta' }</td>
+                                </tr>
+                            `;
+                            respuestaBody.innerHTML += row;
+                        });
+                    } else {
+                        respuestaBody.innerHTML = `
+                            <tr>
+                                <td colspan="4" class="text-center">No hay contenidos disponibles para este curso.</td>
+                            </tr>
+                        `;
+                    }
+                })
+                .catch(error => console.error('Error al obtener los contenidos:', error));
+        } else {
+            // Si no se selecciona un curso, limpia la tabla
+            document.getElementById('respuestaBody').innerHTML = '';
         }
     });
 </script>

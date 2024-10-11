@@ -21,6 +21,9 @@ Route::post('/create_worker/respuestas', [Create_workerController::class, 'respu
 Route::get('/create_worker/{id}/contenidos', [Create_workerController::class, 'getContenidos'])->name('create_worker.getContenidos');
 Route::get('/create_worker/{id}/evaluaciones', [Create_workerController::class, 'getEvaluaciones'])->name('create_worker.getEvaluaciones');
 Route::get('/create_worker/{id}/crear_preguntas', [Create_workerController::class, 'get_id_c_pregunta'])->name('create_worker.get_id_c_pregunta');
+Route::get('/create_worker/{id}/crear_respuestas', [Create_workerController::class, 'get_id_c_respuesta'])->name('create_worker.get_id_c_respuesta');
+Route::get('/create_worker/{id}/trabajadores', [Create_workerController::class, 'get_id_trabajador'])->name('create_worker.get_id_trabajador');
+
 
 
 

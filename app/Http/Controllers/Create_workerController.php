@@ -145,4 +145,20 @@ class Create_workerController extends Controller
         }
         return response()->json($id_c_pregunta);
     }
+    public function get_id_c_respuesta($id)
+    {
+        $id_c_respuesta = crear_respuestas::where('id_c_pregunta', $id)->get();
+        if ($id_c_respuesta->isEmpty()) {
+            return response()->json(['message' => 'No contents found'], 200);
+        }
+        return response()->json($id_c_respuesta);
+    }
+    public function get_id_trabajador($id)
+    {
+        $id_trabajador = respuestas::with(['pregunta', 'respuesta'])->where('id_trabajador', $id)->get();
+        if ($id_trabajador->isEmpty()) {
+            return response()->json(['message' => 'No contents found'], 200);
+        }
+        return response()->json($id_trabajador);
+    }
 }
