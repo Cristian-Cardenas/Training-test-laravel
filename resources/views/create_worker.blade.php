@@ -393,7 +393,7 @@
                             @endforeach
                         </select>
                         <label class="active">Selecciona tu evaluacion</label>
-                        <select name="id_evaluacion" id="evaluacionSelect" class="form-control" required>
+                        <select name="id_evaluacion" id="evaluacionSelectWork" class="form-control" required>
                             <option value="">- - -</option>
                             @foreach ($evaluaciones as $evaluacion)
                                 <option value="{{ $evaluacion->id_evaluacion }}">{{ $evaluacion->id_evaluacion }}
@@ -401,7 +401,7 @@
                             @endforeach
                         </select>
                         <label class="active">Selecciona una pregunta</label>
-                        <select name="id_c_pregunta" class="form-control" required>
+                        <select name="id_c_pregunta" id="preguntaSelectWork" class="form-control" required>
                             <option value="">- - -</option>
                             @foreach ($crear_preguntas as $crear_pregunta)
                                 <option value="{{ $crear_pregunta->id_c_pregunta }}">{{ $crear_pregunta->pregunta }}
@@ -409,7 +409,7 @@
                             @endforeach
                         </select>
                         <label class="active">Selecciona una respuesta</label>
-                        <select name="id_c_respuesta" class="form-control" required>
+                        <select name="id_c_respuesta" id="respuestaSelectWork" class="form-control" required>
                             <option value="">- - -</option>
                             @foreach ($crear_respuestas as $crear_respuesta)
                                 <option value="{{ $crear_respuesta->id_c_respuesta }}">
@@ -472,7 +472,7 @@
                     // console.log(response); 
                     return response.json();
                 })
-                
+
                 .then(data => {
                     console.log('Datos recibidos:', data);
                     const contenidoBody = document.getElementById('contenidoBody');
@@ -506,16 +506,16 @@
             document.getElementById('contenidoBody').innerHTML = '';
         }
     });
-    
+
     document.getElementById('contenidoSelect').addEventListener('change', function() {
         const contenidoId = this.value;
         if (contenidoId) {
-            fetch(`/new-project/public/create_worker/${contenidoId}/evaluaciones`) 
+            fetch(`/new-project/public/create_worker/${contenidoId}/evaluaciones`)
                 .then(response => {
                     // console.log(response); 
                     return response.json();
                 })
-                
+
                 .then(data => {
                     console.log('Datos recibidos:', data);
                     const evaluacionBody = document.getElementById('evaluacionBody');
@@ -551,12 +551,12 @@
     document.getElementById('evaluacionSelect').addEventListener('change', function() {
         const evaluacionId = this.value;
         if (evaluacionId) {
-            fetch(`/new-project/public/create_worker/${evaluacionId}/crear_preguntas`) 
+            fetch(`/new-project/public/create_worker/${evaluacionId}/crear_preguntas`)
                 .then(response => {
                     // console.log(response); 
                     return response.json();
                 })
-                
+
                 .then(data => {
                     console.log('Datos recibidos:', data);
                     const c_preguntaBody = document.getElementById('c_preguntaBody');
@@ -587,16 +587,16 @@
             document.getElementById('c_preguntaBody').innerHTML = '';
         }
     });
-    
+
     document.getElementById('preguntaSelect').addEventListener('change', function() {
         const preguntaId = this.value;
         if (preguntaId) {
-            fetch(`/new-project/public/create_worker/${preguntaId}/crear_respuestas`) 
+            fetch(`/new-project/public/create_worker/${preguntaId}/crear_respuestas`)
                 .then(response => {
                     // console.log(response); 
                     return response.json();
                 })
-                
+
                 .then(data => {
                     console.log('Datos recibidos:', data);
                     const c_respuestaBody = document.getElementById('c_respuestaBody');
@@ -628,16 +628,16 @@
             document.getElementById('c_respuestaBody').innerHTML = '';
         }
     });
-    
+
     document.getElementById('trabajadorSelect').addEventListener('change', function() {
         const trabajadorId = this.value;
         if (trabajadorId) {
-            fetch(`/new-project/public/create_worker/${trabajadorId}/trabajadores`) 
+            fetch(`/new-project/public/create_worker/${trabajadorId}/trabajadores`)
                 .then(response => {
                     // console.log(response); 
                     return response.json();
                 })
-                
+
                 .then(data => {
                     console.log('Datos recibidos:', data);
                     const respuestaBody = document.getElementById('respuestaBody');
@@ -669,6 +669,64 @@
         } else {
             // Si no se selecciona un curso, limpia la tabla
             document.getElementById('respuestaBody').innerHTML = '';
+        }
+    });
+
+    document.getElementById('evaluacionSelectWork').addEventListener('change', function() {
+        const evaluacionId = this.value;
+        const preguntaSelectWork = document.getElementById('preguntaSelectWork');
+        console.log(evaluacionId);
+        if (evaluacionId) {
+            fetch(`/new-project/public/create_worker/${evaluacionId}/evaluaciones2`)
+                .then(response => response.json())
+                .then(data => {
+                    preguntaSelectWork.innerHTML =
+                    '<option value="">- - -</option>'; // Limpiar opciones anteriores
+
+                    if (data.message) {
+                        console.log(data.message); // Mostrar mensaje si no hay preguntas
+                    } else {
+                        data.forEach(pregunta => {
+                            const option = document.createElement('option');
+                            option.value = pregunta.id_c_pregunta;
+                            option.textContent = pregunta.pregunta;
+                            preguntaSelectWork.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => console.error('Error al obtener las preguntas:', error));
+        } else {
+            preguntaSelectWork.innerHTML =
+            '<option value="">- - -</option>'; // Limpiar si no hay evaluación seleccionada
+        }
+    });
+
+    document.getElementById('preguntaSelectWork').addEventListener('change', function() {
+        const preguntaId = this.value;
+        const respuestaSelectWork = document.getElementById('respuestaSelectWork');
+        console.log(preguntaId);
+        if (preguntaId) {
+            fetch(`/new-project/public/create_worker/${preguntaId}/pregunta`)
+                .then(response => response.json())
+                .then(data => {
+                    respuestaSelectWork.innerHTML =
+                    '<option value="">- - -</option>'; // Limpiar opciones anteriores
+
+                    if (data.message) {
+                        console.log(data.message); // Mostrar mensaje si no hay preguntas
+                    } else {
+                        data.forEach(c_respuesta => {
+                            const option = document.createElement('option');
+                            option.value = c_respuesta.id_c_respuesta;
+                            option.textContent = c_respuesta.c_respuesta;
+                            respuestaSelectWork.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => console.error('Error al obtener las preguntas:', error));
+        } else {
+            respuestaSelectWork.innerHTML =
+            '<option value="">- - -</option>'; // Limpiar si no hay evaluación seleccionada
         }
     });
 </script>

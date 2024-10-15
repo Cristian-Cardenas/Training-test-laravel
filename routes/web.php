@@ -23,6 +23,11 @@ Route::get('/create_worker/{id}/evaluaciones', [Create_workerController::class, 
 Route::get('/create_worker/{id}/crear_preguntas', [Create_workerController::class, 'get_id_c_pregunta'])->name('create_worker.get_id_c_pregunta');
 Route::get('/create_worker/{id}/crear_respuestas', [Create_workerController::class, 'get_id_c_respuesta'])->name('create_worker.get_id_c_respuesta');
 Route::get('/create_worker/{id}/trabajadores', [Create_workerController::class, 'get_id_trabajador'])->name('create_worker.get_id_trabajador');
+Route::get('/create_worker/{id}/evaluaciones2', [Create_workerController::class, 'get_id_evaluacion'])->name('create_worker.get_id_evaluacion');
+Route::get('/create_worker/{id}/pregunta', [Create_workerController::class, 'get_id_pregunta'])->name('create_worker.get_id_pregunta');
+
+
+
 
 
 
