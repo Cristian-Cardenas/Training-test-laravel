@@ -55,12 +55,29 @@ class Create_workerController extends Controller
     }
     public function crear_contenidos(Request $request)
     {
-        $datos = $request->all();
-        contenidos::create($datos);
+        // Validación de los campos
+        $request->validate([
+            'titulo_contenido' => 'required|string|max:255',
+            'id_curso' => 'required|exists:cursos,id_curso',
+            'material' => 'required|string|max:500',
+            'archivo' => 'required|file|mimes:pdf,mp4,avi,docx,txt|max:10240', // Máx. 10MB
+        ]);
 
-        // Redirigir a la vista index para mostrar nuevamente la lista actualizada
-        return redirect()->route('create_worker.index');
+
+        // Subir el archivo
+        $archivoPath = $request->file('archivo')->store('materiales', 'public'); // Almacena en /storage/app/public/materiales
+
+        contenidos::create([
+            'titulo_contenido' => $request->input('titulo_contenido'),
+            'id_curso' => $request->input('id_curso'),
+            'material' => $request->input('material'),
+            'archivo' => $archivoPath,
+        ]);
+
+        // Redirigir a la vista index con un mensaje de éxito
+        return redirect()->back()->with('success', 'Contenido creado exitosamente.');
     }
+
     public function crear_evaluaciones(Request $request)
     {
         $datos = $request->all();
@@ -87,13 +104,14 @@ class Create_workerController extends Controller
     }
     public function respuestas(Request $request)
     {
-        $request->validate([
+        
+        $datos = $request->validate([
             'id_trabajador' => 'required|exists:trabajadores,id_trabajador',
             'id_c_pregunta' => 'required|exists:crear_preguntas,id_c_pregunta',
             'id_c_respuesta' => 'required|exists:crear_respuestas,id_c_respuesta',
             'id_evaluacion' => 'required|exists:evaluaciones,id_evaluacion',
-
         ]);
+        // dd($datos);
 
         $id_c_respuesta = $request->id_c_respuesta;
 
@@ -101,6 +119,15 @@ class Create_workerController extends Controller
         if ($respuesta_seleccionada) {
 
             $validacion = $respuesta_seleccionada->validacion ?? false;
+            $datos = $intentosRealizados = respuestas::where('id_trabajador', $request->input('id_trabajador'))
+                ->where('id_evaluacion', $request->input('id_evaluacion'))
+                ->count();
+
+            $evaluacion = evaluaciones::find($request->input('id_evaluacion'));
+            // Verificar si se excedió el límite de intentos
+            if ($intentosRealizados >= $evaluacion->limite_intentos) {
+                return redirect()->back()->with('error', 'Ya no tienes intentos disponibles para esta evaluación.');
+            }
             // dd([
             //     'id_trabajador' => $request->id_trabajador,
             //     'id_c_pregunta' => $request->id_c_pregunta,
@@ -113,6 +140,7 @@ class Create_workerController extends Controller
                 'id_c_respuesta' => $id_c_respuesta,
                 'id_evaluacion' => $request->id_evaluacion,
                 'es_correcta' => $validacion,
+                'intento' => $intentosRealizados + 1,
             ]);
 
             return redirect()->route('create_worker.index')->with('success', 'Respuesta guardada exitosamente.');

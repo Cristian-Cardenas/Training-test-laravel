@@ -16,6 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_curso'); 
             $table->string('titulo_contenido', 255); 
             $table->text('material'); 
+            $table->string('archivo'); 
             $table->timestamps(); 
             $table->foreign('id_curso')->references('id_curso')->on('cursos')->onDelete('cascade');
         });

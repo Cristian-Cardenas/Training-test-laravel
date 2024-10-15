@@ -18,6 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_c_pregunta'); 
             $table->unsignedBigInteger('id_c_respuesta'); 
             $table->boolean('es_correcta'); 
+            $table->integer('intento')->default(1);
             $table->timestamps(); 
             $table->foreign('id_trabajador')->references('id_trabajador')->on('trabajadores')
                 ->onDelete('cascade'); 

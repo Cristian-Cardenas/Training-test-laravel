@@ -10,5 +10,5 @@ class contenidos extends Model
     protected $table = 'contenidos';
     protected $primaryKey = 'id_contenido';
 
-    protected $fillable =['id_curso','titulo_contenido', 'material'];
+    protected $fillable =['id_curso','titulo_contenido', 'material', 'archivo'];
 }

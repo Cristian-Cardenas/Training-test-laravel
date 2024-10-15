@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
@@ -9,6 +10,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
         function nextTab(tabId) {
             var nextTab = new bootstrap.Tab(document.querySelector(tabId));
@@ -158,7 +160,8 @@
 
             <div class="tab-pane fade" id="tab3" role="tabpanel" aria-labelledby="tab3-tab">
                 <div class="d-flex container">
-                    <form class="m-5 col" action="{{ route('crear_contenidos') }}" method="post">
+                    <form id="contenidoForm" class="m-5 col" action="{{ route('crear_contenidos') }}"
+                        method="post" enctype="multipart/form-data">
                         {{ csrf_field() }}
                         <div class="mb-3">
                             <label class="active">Titulo del contenido</label>
@@ -172,12 +175,14 @@
                             @endforeach
                         </select>
                         <div class="mb-3">
-                            <label class="active">Material </label>
+                            <label class="active">Contenido </label>
                             <input name="material" type="text" class="validate form-control">
                         </div>
+                        <label>Subir Archivos (PDF, video, etc.):</label>
+                        <input type="file" name="archivo" class="form-control">
+
                         <button type="submit" class="btn btn-primary">Guardar</button>
                     </form>
-
                     <div class="mt-5 col">
                         <h2 class="mb-4">Lista de Contenidos</h2>
 
@@ -188,6 +193,8 @@
                                     <th>ID de Curso</th>
                                     <th>Titulo Contenido </th>
                                     <th>Material</th>
+                                    <th>Archivos</th>
+
                                 </tr>
                             </thead>
                             <tbody id="contenidoBody">
@@ -197,6 +204,7 @@
                                         <td>{{ $contenido->id_curso }}</td>
                                         <td>{{ $contenido->titulo_contenido }}</td>
                                         <td>{{ $contenido->material }}</td>
+                                        <td>{{ $contenido->archivo }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -382,7 +390,7 @@
             </div>
             <div class="tab-pane fade" id="tab7" role="tabpanel" aria-labelledby="tab7-tab">
                 <div class="d-flex container">
-                    <form class="m-5 col" action="{{ route('respuestas') }}" method="post">
+                    <form id="respuestaForm" class="m-5 col" action="{{ route('respuestas') }}" method="post">
                         {{ csrf_field() }}
                         <label class="active">Selecciona tu nombre</label>
                         <select name="id_trabajador" id="trabajadorSelect" class="form-control" required>
@@ -400,22 +408,54 @@
                                 </option>
                             @endforeach
                         </select>
-                        <label class="active">Selecciona una pregunta</label>
+
+                        <label class="active">Preguntas de Examen</label>
+
+                        <div name="id_c_pregunta" id="preguntaSelectWork" class="preguntas-container"></div>
+
+                        @foreach ($crear_preguntas as $crear_pregunta)
+                            @if ($crear_pregunta->id_evaluacion == old('id_evaluacion'))
+                                <!-- Compara el id de la evaluación -->
+                                <div class="pregunta">
+                                    <h3>{{ $crear_pregunta->pregunta }}</h3>
+                                    @foreach ($crear_respuestas as $crear_respuesta)
+                                        @if ($crear_respuesta->id_c_pregunta == $crear_pregunta->id_c_pregunta)
+                                            <div class="form-check">
+                                                <input type="radio" class="form-check-input"
+                                                    name="respuesta[{{ $crear_pregunta->id_c_pregunta }}]"
+                                                    id="respuesta_{{ $crear_respuesta->id_c_respuesta }}"
+                                                    value="{{ $crear_respuesta->id_c_respuesta }}">
+                                                <label class="form-check-label"
+                                                    for="respuesta_{{ $crear_respuesta->id_c_respuesta }}">
+                                                    {{ $crear_respuesta->c_respuesta }}
+                                                </label>
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            @endif
+                        @endforeach
+
+
+                        <input type="hidden" name="id_respuesta_seleccionada" id="id_respuesta_seleccionada">
+                        <!-- Campo oculto para la respuesta seleccionada -->
+
+
+                        {{-- <label class="active">Selecciona una pregunta</label>
                         <select name="id_c_pregunta" id="preguntaSelectWork" class="form-control" required>
-                            <option value="">- - -</option>
                             @foreach ($crear_preguntas as $crear_pregunta)
                                 <option value="{{ $crear_pregunta->id_c_pregunta }}">{{ $crear_pregunta->pregunta }}
                                 </option>
                             @endforeach
-                        </select>
-                        <label class="active">Selecciona una respuesta</label>
+                        </select> --}}
+                        {{-- <label class="active">Selecciona una respuesta</label>
                         <select name="id_c_respuesta" id="respuestaSelectWork" class="form-control" required>
                             <option value="">- - -</option>
                             @foreach ($crear_respuestas as $crear_respuesta)
                                 <option value="{{ $crear_respuesta->id_c_respuesta }}">
                                     {{ $crear_respuesta->c_respuesta }}</option>
                             @endforeach
-                        </select>
+                        </select> --}}
 
                         <button type="submit" class="btn btn-primary">Guardar</button>
                     </form>
@@ -461,13 +501,16 @@
         </div>
     </div>
 
+
 </body>
 <script>
     document.getElementById('cursoSelect').addEventListener('change', function() {
         const cursoId = this.value;
         if (cursoId) {
             // Realiza una solicitud AJAX para obtener los contenidos del curso
-            fetch(`/new-project/public/create_worker/${cursoId}/contenidos`) // Usar el cursoId en lugar de "id"
+            fetch(
+                    `/new-project/public/create_worker/${cursoId}/contenidos`
+                ) // Usar el cursoId en lugar de "id"
                 .then(response => {
                     // console.log(response); 
                     return response.json();
@@ -675,60 +718,67 @@
     document.getElementById('evaluacionSelectWork').addEventListener('change', function() {
         const evaluacionId = this.value;
         const preguntaSelectWork = document.getElementById('preguntaSelectWork');
-        console.log(evaluacionId);
+
+        // Limpiar las preguntas anteriores
+        preguntaSelectWork.innerHTML = '';
+
         if (evaluacionId) {
             fetch(`/new-project/public/create_worker/${evaluacionId}/evaluaciones2`)
                 .then(response => response.json())
                 .then(data => {
-                    preguntaSelectWork.innerHTML =
-                    '<option value="">- - -</option>'; // Limpiar opciones anteriores
+                    data.forEach(pregunta => {
+                        const preguntaDiv = document.createElement('div');
+                        console.log(preguntaDiv);
+                        preguntaDiv.classList.add('pregunta');
+                        preguntaDiv.innerHTML = `<h3>${pregunta.pregunta}</h3>`;
 
-                    if (data.message) {
-                        console.log(data.message); // Mostrar mensaje si no hay preguntas
-                    } else {
-                        data.forEach(pregunta => {
-                            const option = document.createElement('option');
-                            option.value = pregunta.id_c_pregunta;
-                            option.textContent = pregunta.pregunta;
-                            preguntaSelectWork.appendChild(option);
+                        pregunta.respuestas.forEach(respuesta => {
+                            const respuestaDiv = document.createElement('div');
+                            respuestaDiv.classList.add('form-check');
+                            respuestaDiv.innerHTML = `
+                            <input type="radio" class="form-check-input" name="respuesta[${pregunta.id_c_pregunta}]" id="respuesta_${respuesta.id_c_respuesta}" value="${respuesta.id_c_respuesta}">
+                            <label class="form-check-label" for="respuesta_${respuesta.id_c_respuesta}">${respuesta.c_respuesta}</label>
+                        `;
+                            preguntaDiv.appendChild(respuestaDiv);
                         });
-                    }
+
+                        preguntaSelectWork.appendChild(preguntaDiv);
+                    });
                 })
                 .catch(error => console.error('Error al obtener las preguntas:', error));
-        } else {
-            preguntaSelectWork.innerHTML =
-            '<option value="">- - -</option>'; // Limpiar si no hay evaluación seleccionada
         }
     });
 
-    document.getElementById('preguntaSelectWork').addEventListener('change', function() {
-        const preguntaId = this.value;
-        const respuestaSelectWork = document.getElementById('respuestaSelectWork');
-        console.log(preguntaId);
-        if (preguntaId) {
-            fetch(`/new-project/public/create_worker/${preguntaId}/pregunta`)
-                .then(response => response.json())
-                .then(data => {
-                    respuestaSelectWork.innerHTML =
-                    '<option value="">- - -</option>'; // Limpiar opciones anteriores
 
-                    if (data.message) {
-                        console.log(data.message); // Mostrar mensaje si no hay preguntas
-                    } else {
-                        data.forEach(c_respuesta => {
-                            const option = document.createElement('option');
-                            option.value = c_respuesta.id_c_respuesta;
-                            option.textContent = c_respuesta.c_respuesta;
-                            respuestaSelectWork.appendChild(option);
-                        });
-                    }
-                })
-                .catch(error => console.error('Error al obtener las preguntas:', error));
-        } else {
-            respuestaSelectWork.innerHTML =
-            '<option value="">- - -</option>'; // Limpiar si no hay evaluación seleccionada
-        }
-    });
+
+    // document.getElementById('preguntaSelectWork').addEventListener('change', function() {
+    //     const preguntaId = this.value;
+    //     const respuestaSelectWork = document.getElementById('respuestaSelectWork');
+    //     console.log(preguntaId);
+    //     if (preguntaId) {
+    //         fetch(`/new-project/public/create_worker/${preguntaId}/pregunta`)
+    //             .then(response => response.json())
+    //             .then(data => {
+    //                 respuestaSelectWork.innerHTML =
+    //                     ''; // Limpiar opciones anteriores
+
+    //                 if (data.message) {
+    //                     console.log(data.message); // Mostrar mensaje si no hay preguntas
+    //                 } else {
+    //                     data.forEach(c_respuesta => {
+    //                         const option = document.createElement('option');
+    //                         option.value = c_respuesta.id_c_respuesta;
+    //                         option.textContent = c_respuesta.c_respuesta;
+    //                         respuestaSelectWork.appendChild(option);
+    //                     });
+    //                 }
+    //             })
+    //             .catch(error => console.error('Error al obtener las preguntas:', error));
+    //     } else {
+    //         respuestaSelectWork.innerHTML =
+    //             ''; // Limpiar si no hay evaluación seleccionada
+    //     }
+    // });
 </script>
 
 

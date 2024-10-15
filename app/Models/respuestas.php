@@ -10,7 +10,7 @@ class respuestas extends Model
     protected $table = 'respuestas';
     protected $primaryKey = 'id_respuesta';
 
-    protected $fillable =['id_evaluacion','id_trabajador','id_c_pregunta','id_c_respuesta','es_correcta'];
+    protected $fillable =['id_evaluacion','id_trabajador','id_c_pregunta','id_c_respuesta','es_correcta', 'intento'];
 
     public function pregunta()
     {
