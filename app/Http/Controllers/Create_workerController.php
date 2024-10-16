@@ -104,49 +104,51 @@ class Create_workerController extends Controller
     }
     public function respuestas(Request $request)
     {
-        
         $datos = $request->validate([
             'id_trabajador' => 'required|exists:trabajadores,id_trabajador',
-            'id_c_pregunta' => 'required|exists:crear_preguntas,id_c_pregunta',
-            'id_c_respuesta' => 'required|exists:crear_respuestas,id_c_respuesta',
             'id_evaluacion' => 'required|exists:evaluaciones,id_evaluacion',
+            'respuesta' => 'required|array',
+            'respuesta.*' => 'exists:crear_respuestas,id_c_respuesta',
         ]);
-        // dd($datos);
 
-        $id_c_respuesta = $request->id_c_respuesta;
+        $idTrabajador = $request->input('id_trabajador');
+        $idEvaluacion = $request->input('id_evaluacion');
+        $respuestas = $request->input('respuesta');
 
-        $respuesta_seleccionada = crear_respuestas::find($id_c_respuesta);
-        if ($respuesta_seleccionada) {
+        $intentoActual = respuestas::where('id_trabajador', $idTrabajador)
+            ->where('id_evaluacion', $idEvaluacion)
+            ->max('intento');
 
-            $validacion = $respuesta_seleccionada->validacion ?? false;
-            $datos = $intentosRealizados = respuestas::where('id_trabajador', $request->input('id_trabajador'))
-                ->where('id_evaluacion', $request->input('id_evaluacion'))
-                ->count();
+        $evaluacion = evaluaciones::find($idEvaluacion);
 
-            $evaluacion = evaluaciones::find($request->input('id_evaluacion'));
-            // Verificar si se excedió el límite de intentos
-            if ($intentosRealizados >= $evaluacion->limite_intentos) {
-                return redirect()->back()->with('error', 'Ya no tienes intentos disponibles para esta evaluación.');
-            }
-            // dd([
-            //     'id_trabajador' => $request->id_trabajador,
-            //     'id_c_pregunta' => $request->id_c_pregunta,
-            //     'id_c_respuesta' => $id_c_respuesta,
-            //     'es_correcta' => $validacion,
-            // ]);
-            respuestas::create([
-                'id_trabajador' => $request->id_trabajador,
-                'id_c_pregunta' => $request->id_c_pregunta,
-                'id_c_respuesta' => $id_c_respuesta,
-                'id_evaluacion' => $request->id_evaluacion,
-                'es_correcta' => $validacion,
-                'intento' => $intentosRealizados + 1,
-            ]);
-
-            return redirect()->route('create_worker.index')->with('success', 'Respuesta guardada exitosamente.');
-        } else {
-            return redirect()->back()->withErrors('La respuesta seleccionada no es válida.');
+        if ($intentoActual >= $evaluacion->limite_intentos) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Ya no tienes intentos disponibles para esta evaluación.'
+            ], 403);
         }
+
+        $nuevoIntento = $intentoActual ? $intentoActual + 1 : 1;
+
+        foreach ($respuestas as $idPregunta => $idRespuesta) {
+            $respuestaSeleccionada = crear_respuestas::find($idRespuesta);
+
+            if ($respuestaSeleccionada) {
+                $validacion = $respuestaSeleccionada->validacion ?? false;
+
+                respuestas::create([
+                    'id_trabajador' => $idTrabajador,
+                    'id_evaluacion' => $idEvaluacion,
+                    'id_c_pregunta' => $idPregunta,
+                    'id_c_respuesta' => $idRespuesta,
+                    'es_correcta' => $validacion,
+                    'intento' => $nuevoIntento,
+                ]);
+            }
+        }
+
+        return response()->json(['success' => true])
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
     }
 
     public function getContenidos($id)
@@ -214,5 +216,40 @@ class Create_workerController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
+    }
+    public function getPreguntas($id)
+    {
+        $evaluacion = evaluaciones::find($id);
+
+        if (!$evaluacion) {
+            return response()->json(['error' => 'Evaluación no encontrada'], 404);
+        }
+
+        $preguntas = crear_preguntas::where('id_evaluacion', $id)->get()->map(function ($pregunta) {
+            return [
+                'id_c_pregunta' => $pregunta->id_c_pregunta,
+                'pregunta' => $pregunta->pregunta,
+                'respuestas' => crear_respuestas::where('id_c_pregunta', $pregunta->id_c_pregunta)->get(),
+            ];
+        });
+
+        return response()->json([
+            'limite_intentos' => $evaluacion->limite_intentos,
+            'preguntas' => $preguntas,
+        ]);
+    }
+    public function verificarIntentos($id_trabajador, $id_evaluacion)
+    {
+        $intentoActual = respuestas::where('id_trabajador', $id_trabajador)
+            ->where('id_evaluacion', $id_evaluacion)
+            ->max('intento');  // Obtener el máximo intento realizado
+
+        $evaluacion = evaluaciones::find($id_evaluacion);
+
+        if ($intentoActual >= $evaluacion->limite_intentos) {
+            return response()->json(['puede_continuar' => false, 'error' => 'No tienes intentos disponibles.'], 403);
+        }
+
+        return response()->json(['puede_continuar' => true]);
     }
 }

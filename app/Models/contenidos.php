@@ -11,4 +11,8 @@ class contenidos extends Model
     protected $primaryKey = 'id_contenido';
 
     protected $fillable =['id_curso','titulo_contenido', 'material', 'archivo'];
+    public function curso()
+    {
+        return $this->belongsTo(cursos::class, 'id_curso');
+    }
 }

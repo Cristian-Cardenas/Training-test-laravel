@@ -11,4 +11,9 @@ class evaluaciones extends Model
     protected $primaryKey = 'id_evaluacion';
 
     protected $fillable =['id_contenido' ,'limite_intentos', 'fecha_limite'];
+    
+    public function contenido()
+    {
+        return $this->belongsTo(contenidos::class, 'id_contenido','id_contenido');
+    }
 }

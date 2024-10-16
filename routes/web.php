@@ -25,6 +25,10 @@ Route::get('/create_worker/{id}/crear_respuestas', [Create_workerController::cla
 Route::get('/create_worker/{id}/trabajadores', [Create_workerController::class, 'get_id_trabajador'])->name('create_worker.get_id_trabajador');
 Route::get('/create_worker/{id}/evaluaciones2', [Create_workerController::class, 'get_id_evaluacion'])->name('create_worker.get_id_evaluacion');
 Route::get('/create_worker/{id}/pregunta', [Create_workerController::class, 'get_id_pregunta'])->name('create_worker.get_id_pregunta');
+Route::get('/create_worker/{id}/preguntas', [Create_workerController::class, 'getPreguntas']);
+
+
+Route::get('/create_worker/{id_trabajador}/{id_evaluacion}', [Create_workerController::class, 'verificarIntentos']);
 
 
 

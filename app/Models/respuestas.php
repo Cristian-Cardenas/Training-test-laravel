@@ -16,10 +16,16 @@ class respuestas extends Model
     {
         return $this->belongsTo(crear_preguntas::class, 'id_c_pregunta', 'id_c_pregunta');
     }
-
-    // Relación con el modelo crear_respuestas
     public function respuesta()
     {
         return $this->belongsTo(crear_respuestas::class, 'id_c_respuesta', 'id_c_respuesta');
+    }
+    public function trabajador()
+    {
+        return $this->belongsTo(trabajadores::class, 'id_trabajador', 'id_trabajador');
+    }
+    public function evaluacion()
+    {
+        return $this->belongsTo(evaluaciones::class, 'id_evaluacion', 'id_evaluacion');
     }
 }

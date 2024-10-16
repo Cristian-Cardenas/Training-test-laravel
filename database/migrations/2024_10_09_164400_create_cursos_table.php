@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('titulo_curso', 255)->unique();
             $table->text('descripcion_curso'); 
             $table->string('area', 100); 
+            $table->boolean('estado')->default(true);
             $table->timestamps(); 
         });
     }
