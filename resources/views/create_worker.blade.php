@@ -260,7 +260,8 @@
                                 @foreach ($evaluaciones as $evaluacion)
                                     <tr>
                                         <td>{{ $evaluacion->id_evaluacion }}</td>
-                                        <td>{{ $evaluacion->id_contenido }} {{ $evaluacion->contenido->titulo_contenido }}</td>
+                                        <td>{{ $evaluacion->id_contenido }}
+                                            {{ $evaluacion->contenido->titulo_contenido }}</td>
                                         <td>{{ $evaluacion->limite_intentos }}</td>
                                         <td>{{ $evaluacion->fecha_limite }}</td>
                                     </tr>
@@ -462,7 +463,8 @@
                 <div class="d-flex container">
                     <div class="mt-5 col">
                         <h2 class="mb-4">Lista de Notas por Trabajador</h2>
-
+                        <input class="form-control" id="myInput" type="text" placeholder="Buscar..">
+                        <br>
                         <table class="table table-bordered table-striped">
                             <thead class="thead-dark">
                                 <tr>
@@ -495,7 +497,7 @@
         if (cursoId) {
             fetch(
                     `/new-project/public/create_worker/${cursoId}/contenidos`
-                ) 
+                )
                 .then(response => {
                     return response.json();
                 })
@@ -541,7 +543,7 @@
                 .then(data => {
                     console.log('Datos recibidos:', data);
                     const evaluacionBody = document.getElementById('evaluacionBody');
-                    evaluacionBody.innerHTML = ''; 
+                    evaluacionBody.innerHTML = '';
 
                     if (data.length > 0) {
                         data.forEach(evaluacion => {
@@ -579,7 +581,7 @@
 
                 .then(data => {
                     const c_preguntaBody = document.getElementById('c_preguntaBody');
-                    c_preguntaBody.innerHTML = ''; 
+                    c_preguntaBody.innerHTML = '';
 
                     if (data.length > 0) {
                         data.forEach(crear_pregunta => {
@@ -610,14 +612,14 @@
         const preguntaId = this.value;
         if (preguntaId) {
             fetch(`/new-project/public/create_worker/${preguntaId}/crear_respuestas`)
-                .then(response => { 
+                .then(response => {
                     return response.json();
                 })
 
                 .then(data => {
                     console.log('Datos recibidos:', data);
                     const c_respuestaBody = document.getElementById('c_respuestaBody');
-                    c_respuestaBody.innerHTML = ''; 
+                    c_respuestaBody.innerHTML = '';
 
                     if (data.length > 0) {
                         data.forEach(crear_respuesta => {
@@ -758,7 +760,8 @@
 
             document.getElementById('respuestaForm').addEventListener('submit', function(e) {
                 e.preventDefault();
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute(
+                    'content');
 
                 const formData = new FormData(this);
 
@@ -811,7 +814,7 @@
             .then(response => response.json())
             .then(data => {
                 const notasBody = document.getElementById('notasBody');
-                notasBody.innerHTML = ''; 
+                notasBody.innerHTML = '';
 
                 if (data.message) {
                     notasBody.innerHTML = `<tr><td colspan="5">${data.message}</td></tr>`;
@@ -837,6 +840,18 @@
             });
     });
     //--------------
+    $(document).ready(function() {
+        $("#myInput").on("keyup", function() {
+            var value = $(this).val().toLowerCase();
+            $("#notasBody tr").filter(function() {
+                $(this).toggle(
+                    $(this).children("td").filter(function() {
+                        return $(this).text().toLowerCase().indexOf(value) > -1;
+                    }).length > 0
+                );
+            });
+        });
+    });
 </script>
 
 
