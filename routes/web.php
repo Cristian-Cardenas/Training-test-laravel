@@ -32,9 +32,8 @@ Route::get('/create_worker/{id}/preguntas', [Create_workerController::class, 'ge
 
 
 Route::get('/create_worker/{id_trabajador}/{id_evaluacion}', [Create_workerController::class, 'verificarIntentos'])->name('create_worker.verificarIntentos');
-
-
-
+Route::get('/create_worker/getNotasPorTrabajador', [Create_workerController::class, 'getNotasPorTrabajador'])->name('create_worker.getNotasPorTrabajador');
+Route::get('/create_worker/get_notas', [Create_workerController::class, 'getNotasPorTrabajador'])->name('create_worker.getNotasPorTrabajador');
 
 
 

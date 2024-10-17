@@ -32,14 +32,13 @@ class Create_workerController extends Controller
             'crear_preguntas' => $crear_preguntas,
             'crear_respuestas' => $crear_respuestas,
             'respuestas' => $respuestas,
+
         ]);
     }
     public function crear_trabajadores(Request $request)
     {
         $datos = $request->all();
         trabajadores::create($datos);
-
-        // Redirigir a la vista index para mostrar nuevamente la lista actualizada
         return redirect()->route('create_worker.index');
     }
     public function crear_cursos(Request $request)
@@ -95,7 +94,7 @@ class Create_workerController extends Controller
             'id_evaluacion' => 'required|exists:evaluaciones,id_evaluacion',
             'respuesta' => 'required|array',
         ]);
-        dd($datos);
+        // dd($datos);
 
 
         $respuestas = $request->input('respuesta');
@@ -143,9 +142,8 @@ class Create_workerController extends Controller
                 'success' => true,
                 'message' => 'Respuestas guardadas correctamente.'
             ], 200);
-
         } catch (\Exception $e) {
-            
+
             DB::rollBack();
 
             return response()->json([
@@ -153,48 +151,6 @@ class Create_workerController extends Controller
                 'error' => 'Ocurrió un error al guardar las respuestas: ' . $e->getMessage()
             ], 500);
         }
-
-
-
-        // $id_c_respuesta = $request->id_c_respuesta;
-
-        // $respuesta_seleccionada = crear_respuestas::find($id_c_respuesta);
-        // if ($respuesta_seleccionada) {
-
-        //     $validacion = $respuesta_seleccionada->validacion ?? false;
-        //     $datos = $intentosRealizados = respuestas::where('id_trabajador', $request->input('id_trabajador'))
-        //         ->where('id_evaluacion', $request->input('id_evaluacion'))
-        //         ->count();
-
-        //     $evaluacion = evaluaciones::find($request->input('id_evaluacion'));
-        //     // Verificar si se excedió el límite de intentos
-        //     if ($intentosRealizados >= $evaluacion->limite_intentos) {
-        //         return redirect()->back()->with('error', 'Ya no tienes intentos disponibles para esta evaluación.');
-        //     }
-        //     // dd([
-        //     //     'id_trabajador' => $request->id_trabajador,
-        //     //     'id_c_pregunta' => $request->id_c_pregunta,
-        //     //     'id_c_respuesta' => $id_c_respuesta,
-        //     //     'es_correcta' => $validacion,
-        //     // ]);
-        //     respuestas::create([
-        //         'id_trabajador' => $request->id_trabajador,
-        //         'id_c_pregunta' => $request->id_c_pregunta,
-        //         'id_c_respuesta' => $id_c_respuesta,
-        //         'id_evaluacion' => $request->id_evaluacion,
-        //         'es_correcta' => $validacion,
-        //         'intento' => $intentosRealizados + 1,
-        //     ]);
-        //     return response()->json([
-        //         'success' => true,
-        //         'message' => 'Respuesta guardada exitosamente.'
-        //     ]);
-        // } else {
-        //     return response()->json([
-        //         'success' => false,
-        //         'message' => 'La respuesta seleccionada no es válida.'
-        //     ], 400); 
-        // }
     }
 
     public function getContenidos($id)
@@ -297,5 +253,46 @@ class Create_workerController extends Controller
         }
 
         return response()->json(['puede_continuar' => true]);
+    }
+    public function getNotasPorTrabajador()
+    {
+        $respuestas = respuestas::with(['trabajador', 'evaluacion.contenido.curso'])
+            ->select(
+                'id_trabajador',
+                'id_evaluacion',
+                'intento', 
+                DB::raw('SUM(CASE WHEN es_correcta = true THEN 1 ELSE 0 END) as correctas'),
+                DB::raw('COUNT(*) as total')
+            )
+            ->groupBy('id_trabajador', 'id_evaluacion', 'intento') 
+            ->get();
+
+        $resultadosAgrupados = [];
+
+        foreach ($respuestas as $respuesta) {
+            $nota = ($respuesta->correctas / $respuesta->total) * 5;
+
+            $key = "{$respuesta->id_trabajador}-{$respuesta->id_evaluacion}";
+
+            if (!isset($resultadosAgrupados[$key]) || $nota > $resultadosAgrupados[$key]['nota']) {
+                $curso = $respuesta->evaluacion->contenido->curso->titulo_curso ?? 'Sin curso';
+
+                $resultadosAgrupados[$key] = [
+                    'id_trabajador' => $respuesta->id_trabajador,
+                    'nombre' => $respuesta->trabajador->nombre_trabajador,
+                    'curso' => $curso,
+                    'nota' => number_format($nota, 2),
+                    'fecha' => $respuesta->evaluacion->created_at->format('Y-m-d'),
+                ];
+            }
+        }
+
+        $resultados = array_values($resultadosAgrupados);
+
+        if (empty($resultados)) {
+            return response()->json(['message' => 'No hay notas disponibles'], 200);
+        }
+
+        return response()->json($resultados);
     }
 }

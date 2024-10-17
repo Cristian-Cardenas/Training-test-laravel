@@ -260,7 +260,7 @@
                                 @foreach ($evaluaciones as $evaluacion)
                                     <tr>
                                         <td>{{ $evaluacion->id_evaluacion }}</td>
-                                        <td>{{ $evaluacion->id_contenido }}</td>
+                                        <td>{{ $evaluacion->id_contenido }} {{ $evaluacion->contenido->titulo_contenido }}</td>
                                         <td>{{ $evaluacion->limite_intentos }}</td>
                                         <td>{{ $evaluacion->fecha_limite }}</td>
                                     </tr>
@@ -460,39 +460,25 @@
             </div>
             <div class="tab-pane fade" id="tab8" role="tabpanel" aria-labelledby="tab8-tab">
                 <div class="d-flex container">
-
                     <div class="mt-5 col">
-                        <h2 class="mb-4">Lista de Respuestas</h2>
-                        @if (isset($respuestas) && $respuestas)
-                            <table class="table table-bordered table-striped">
-                                <thead class="thead-dark">
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Nombre</th>
-                                        <th>Curso</th>
-                                        <th>Nota</th>
-                                        <th>Fecha</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="respuestaBody">
-                                    @foreach ($respuestas as $respuesta)
-                                        <tr>
-                                            <td>{{ $respuesta->id_trabajador }}</td>
-                                            <td>{{ $respuesta->trabajador->nombre_trabajador ?? 'Sin trabajador' }}
-                                            </td>
-                                            <td>{{ $respuesta->evaluacion->contenido->curso->titulo_curso ?? 'Sin curso' }}
-                                            </td>
-                                            {{-- <td>{{ $respuesta->pregunta->pregunta ?? 'Sin nota' }}</td> --}}
-                                            <td>{{ $respuesta->respuesta->created_at ?? 'Sin fecha' }}</td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        @else
-                            <div class="alert alert-info" role="alert">
-                                No hay respuestas registradas.
-                            </div>
-                        @endif
+                        <h2 class="mb-4">Lista de Notas por Trabajador</h2>
+
+                        <table class="table table-bordered table-striped">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>ID Trabajador</th>
+                                    <th>Nombre</th>
+                                    <th>Curso</th>
+                                    <th>Nota</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody id="notasBody">
+                                <tr>
+                                    <td colspan="5">Cargando datos...</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
                 <button class="btn btn-secondary" onclick="prevTab('#tab7-tab')">Anterior</button>
@@ -507,22 +493,18 @@
     document.getElementById('cursoSelect').addEventListener('change', function() {
         const cursoId = this.value;
         if (cursoId) {
-            // Realiza una solicitud AJAX para obtener los contenidos del curso
             fetch(
                     `/new-project/public/create_worker/${cursoId}/contenidos`
-                ) // Usar el cursoId en lugar de "id"
+                ) 
                 .then(response => {
-                    // console.log(response); 
                     return response.json();
                 })
 
                 .then(data => {
-                    console.log('Datos recibidos:', data);
                     const contenidoBody = document.getElementById('contenidoBody');
-                    contenidoBody.innerHTML = ''; // Limpiar tabla anterior
+                    contenidoBody.innerHTML = '';
 
                     if (data.length > 0) {
-                        // Iterar sobre los contenidos obtenidos y agregarlos a la tabla
                         data.forEach(contenido => {
                             const row = `
                                 <tr>
@@ -535,7 +517,6 @@
                             contenidoBody.innerHTML += row;
                         });
                     } else {
-                        // Si no hay contenidos, muestra un mensaje en la tabla
                         contenidoBody.innerHTML = `
                             <tr>
                                 <td colspan="4" class="text-center">No hay cursos disponibles.</td>
@@ -545,7 +526,6 @@
                 })
                 .catch(error => console.error('Error al obtener los cursos:', error));
         } else {
-            // Si no se selecciona un curso, limpia la tabla
             document.getElementById('contenidoBody').innerHTML = '';
         }
     });
@@ -555,14 +535,13 @@
         if (contenidoId) {
             fetch(`/new-project/public/create_worker/${contenidoId}/evaluaciones`)
                 .then(response => {
-                    // console.log(response); 
                     return response.json();
                 })
 
                 .then(data => {
                     console.log('Datos recibidos:', data);
                     const evaluacionBody = document.getElementById('evaluacionBody');
-                    evaluacionBody.innerHTML = ''; // Limpiar tabla anterior
+                    evaluacionBody.innerHTML = ''; 
 
                     if (data.length > 0) {
                         data.forEach(evaluacion => {
@@ -586,7 +565,6 @@
                 })
                 .catch(error => console.error('Error al obtener los contenidos:', error));
         } else {
-            // Si no se selecciona un curso, limpia la tabla
             document.getElementById('evaluacionBody').innerHTML = '';
         }
     });
@@ -596,14 +574,12 @@
         if (evaluacionId) {
             fetch(`/new-project/public/create_worker/${evaluacionId}/crear_preguntas`)
                 .then(response => {
-                    // console.log(response); 
                     return response.json();
                 })
 
                 .then(data => {
-                    console.log('Datos recibidos:', data);
                     const c_preguntaBody = document.getElementById('c_preguntaBody');
-                    c_preguntaBody.innerHTML = ''; // Limpiar tabla anterior
+                    c_preguntaBody.innerHTML = ''; 
 
                     if (data.length > 0) {
                         data.forEach(crear_pregunta => {
@@ -626,7 +602,6 @@
                 })
                 .catch(error => console.error('Error al obtener las evaluaciones:', error));
         } else {
-            // Si no se selecciona un curso, limpia la tabla
             document.getElementById('c_preguntaBody').innerHTML = '';
         }
     });
@@ -635,15 +610,14 @@
         const preguntaId = this.value;
         if (preguntaId) {
             fetch(`/new-project/public/create_worker/${preguntaId}/crear_respuestas`)
-                .then(response => {
-                    // console.log(response); 
+                .then(response => { 
                     return response.json();
                 })
 
                 .then(data => {
                     console.log('Datos recibidos:', data);
                     const c_respuestaBody = document.getElementById('c_respuestaBody');
-                    c_respuestaBody.innerHTML = ''; // Limpiar tabla anterior
+                    c_respuestaBody.innerHTML = ''; 
 
                     if (data.length > 0) {
                         data.forEach(crear_respuesta => {
@@ -667,7 +641,6 @@
                 })
                 .catch(error => console.error('Error al obtener las preguntas:', error));
         } else {
-            // Si no se selecciona un curso, limpia la tabla
             document.getElementById('c_respuestaBody').innerHTML = '';
         }
     });
@@ -677,12 +650,10 @@
         if (trabajadorId) {
             fetch(`/new-project/public/create_worker/${trabajadorId}/trabajadores`)
                 .then(response => {
-                    // console.log(response); 
                     return response.json();
                 })
 
                 .then(data => {
-                    console.log('Datos recibidos:', data);
                     const respuestaBody = document.getElementById('respuestaBody');
                     respuestaBody.innerHTML = ''; // Limpiar tabla anterior
 
@@ -787,6 +758,7 @@
 
             document.getElementById('respuestaForm').addEventListener('submit', function(e) {
                 e.preventDefault();
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
                 const formData = new FormData(this);
 
@@ -833,7 +805,38 @@
             console.error('CSRF token no encontrado en el meta.');
         }
     });
-    // --------*------------*------------
+    // Respuestas Generales -----------
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('{{ route('create_worker.getNotasPorTrabajador') }}')
+            .then(response => response.json())
+            .then(data => {
+                const notasBody = document.getElementById('notasBody');
+                notasBody.innerHTML = ''; 
+
+                if (data.message) {
+                    notasBody.innerHTML = `<tr><td colspan="5">${data.message}</td></tr>`;
+                } else {
+                    data.forEach(nota => {
+                        const row = `
+                            <tr>
+                                <td>${nota.id_trabajador}</td>
+                                <td>${nota.nombre}</td>
+                                <td>${nota.curso}</td>
+                                <td>${nota.nota}</td>
+                                <td>${nota.fecha}</td>
+                            </tr>
+                        `;
+                        notasBody.innerHTML += row;
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('notasBody').innerHTML =
+                    `<tr><td colspan="5">Error al cargar los datos</td></tr>`;
+            });
+    });
+    //--------------
 </script>
 
 
