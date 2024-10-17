@@ -2,7 +2,8 @@
 <html lang="en">
 
 <head>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
@@ -391,7 +392,7 @@
             </div>
             <div class="tab-pane fade" id="tab7" role="tabpanel" aria-labelledby="tab7-tab">
                 <div class="d-flex container">
-                    <form id="respuestaForm" class="m-5 col" action="{{ route('respuestas') }}" method="post">
+                    <form id="respuestaForm" class="m-5 col" action="{{ route('respuestas') }}" method="POST">
                         {{ csrf_field() }}
                         <label class="active">Selecciona tu nombre</label>
                         <select name="id_trabajador" id="trabajadorSelect" class="form-control" required>
@@ -405,7 +406,8 @@
                         <select name="id_evaluacion" id="evaluacionSelectWork" class="form-control" required>
                             <option value="">- - -</option>
                             @foreach ($evaluaciones as $evaluacion)
-                                <option value="{{ $evaluacion->id_evaluacion }}">{{ $evaluacion->id_evaluacion }} - fecha {{ $evaluacion->fecha_limite }}
+                                <option value="{{ $evaluacion->id_evaluacion }}">{{ $evaluacion->id_evaluacion }} -
+                                    fecha {{ $evaluacion->fecha_limite }}
                                 </option>
                             @endforeach
                         </select>
@@ -415,11 +417,9 @@
                         <label class="active">Preguntas de Examen</label>
                         <div id="preguntasContainer" class="preguntas-container"></div> <!-- Contenedor dinámico -->
 
-                        <input type="hidden" name="id_trabajador" value="{{ $trabajador->id_trabajador }}">
-
                         <button type="submit" class="btn btn-primary">Guardar</button>
                     </form>
-
+                    <div id="responseMessage" style="margin-top:10px;"></div>
                     <div class="mt-5 col">
                         <h2 class="mb-4">Lista de Respuestas</h2>
                         @if (isset($respuestas) && $respuestas)
@@ -460,7 +460,7 @@
             </div>
             <div class="tab-pane fade" id="tab8" role="tabpanel" aria-labelledby="tab8-tab">
                 <div class="d-flex container">
-                    
+
                     <div class="mt-5 col">
                         <h2 class="mb-4">Lista de Respuestas</h2>
                         @if (isset($respuestas) && $respuestas)
@@ -478,8 +478,10 @@
                                     @foreach ($respuestas as $respuesta)
                                         <tr>
                                             <td>{{ $respuesta->id_trabajador }}</td>
-                                            <td>{{ $respuesta->trabajador->nombre_trabajador ?? 'Sin trabajador' }}</td>
-                                            <td>{{ $respuesta->evaluacion->contenido->curso->titulo_curso ?? 'Sin curso' }}</td>
+                                            <td>{{ $respuesta->trabajador->nombre_trabajador ?? 'Sin trabajador' }}
+                                            </td>
+                                            <td>{{ $respuesta->evaluacion->contenido->curso->titulo_curso ?? 'Sin curso' }}
+                                            </td>
                                             {{-- <td>{{ $respuesta->pregunta->pregunta ?? 'Sin nota' }}</td> --}}
                                             {{-- <td>{{ $respuesta->respuesta->c_respuesta ?? 'Sin fecgha' }}</td> --}}
                                         </tr>
@@ -712,14 +714,10 @@
             document.getElementById('respuestaBody').innerHTML = '';
         }
     });
-
-    
-
     document.addEventListener('DOMContentLoaded', function() {
         const trabajadorSelect = document.getElementById('trabajadorSelect');
         const evaluacionSelect = document.getElementById('evaluacionSelectWork');
-        const preguntasContainer = document.getElementById(
-        'preguntasContainer'); 
+        const preguntasContainer = document.getElementById('preguntasContainer');
         const mensajeError = document.createElement('div');
         mensajeError.classList.add('alert', 'alert-danger');
 
@@ -728,11 +726,11 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.puede_continuar) {
-                        cargarPreguntas(idEvaluacion); 
+                        cargarPreguntas(idEvaluacion);
                     } else {
                         mensajeError.textContent = data.error;
-                        preguntasContainer.innerHTML = ''; 
-                        preguntasContainer.appendChild(mensajeError); 
+                        preguntasContainer.innerHTML = '';
+                        preguntasContainer.appendChild(mensajeError);
                     }
                 })
                 .catch(error => console.error('Error:', error));
@@ -746,7 +744,7 @@
         }
 
         function mostrarPreguntas(preguntas) {
-            preguntasContainer.innerHTML = ''; 
+            preguntasContainer.innerHTML = '';
             preguntas.forEach(pregunta => {
                 const preguntaDiv = document.createElement('div');
                 preguntaDiv.classList.add('pregunta');
@@ -775,9 +773,64 @@
             if (idTrabajador && idEvaluacion) {
                 verificarIntentos(idTrabajador, idEvaluacion);
             } else {
-                preguntasContainer.innerHTML = ''; 
+                preguntasContainer.innerHTML = '';
             }
         });
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+        const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+
+        if (csrfTokenMeta) {
+            const csrfToken = csrfTokenMeta.getAttribute('content');
+            const responseMessage = document.getElementById('responseMessage');
+
+            document.getElementById('respuestaForm').addEventListener('submit', function(e) {
+                e.preventDefault(); 
+
+                const formData = new FormData(this);
+
+                fetch(this.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        responseMessage.innerHTML = '';
+
+                        if (data.success) {
+                            const tab = new bootstrap.Tab(document.querySelector('#tab7-tab'));
+                            tab.show();
+                            responseMessage.innerHTML = data.message; 
+                            responseMessage.classList.remove(
+                            'alert-danger'); 
+                            responseMessage.classList.add('alert',
+                            'alert-success');
+                        } else {
+                            responseMessage.innerHTML = data.error || 'Ocurrió un error.';
+                            responseMessage.classList.remove(
+                            'alert-success'); 
+                            responseMessage.classList.add('alert',
+                            'alert-danger'); 
+                        }
+
+                        responseMessage.style.display = 'block';
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        responseMessage.innerHTML = 'Ocurrió un error al enviar el formulario.';
+                        responseMessage.classList.remove(
+                        'alert-success'); // Eliminar clase de éxito si existe
+                        responseMessage.classList.add('alert',
+                        'alert-danger'); // Añadir clase de error
+                        responseMessage.style.display = 'block'; // Mostrar el div
+                    });
+            });
+        } else {
+            console.error('CSRF token no encontrado en el meta.');
+        }
     });
 </script>
 

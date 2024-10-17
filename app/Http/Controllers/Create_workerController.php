@@ -10,10 +10,10 @@ use App\Models\evaluaciones;
 use App\Models\respuestas;
 use Illuminate\Http\Request;
 use App\Models\trabajadores;
+use Illuminate\Support\Facades\DB;
 
 class Create_workerController extends Controller
 {
-    // Método que obtiene tanto trabajadores como cursos
     public function index()
     {
         $trabajadores = trabajadores::all();
@@ -31,11 +31,9 @@ class Create_workerController extends Controller
             'evaluaciones' => $evaluaciones,
             'crear_preguntas' => $crear_preguntas,
             'crear_respuestas' => $crear_respuestas,
-            'respuestas' => $respuestas
+            'respuestas' => $respuestas,
         ]);
     }
-
-    // Método para crear trabajadores
     public function crear_trabajadores(Request $request)
     {
         $datos = $request->all();
@@ -44,7 +42,6 @@ class Create_workerController extends Controller
         // Redirigir a la vista index para mostrar nuevamente la lista actualizada
         return redirect()->route('create_worker.index');
     }
-    // Método para crear cursos
     public function crear_cursos(Request $request)
     {
         $datos = $request->all();
@@ -55,16 +52,12 @@ class Create_workerController extends Controller
     }
     public function crear_contenidos(Request $request)
     {
-        // Validación de los campos
         $request->validate([
             'titulo_contenido' => 'required|string|max:255',
             'id_curso' => 'required|exists:cursos,id_curso',
             'material' => 'required|string|max:500',
-            'archivo' => 'required|file|mimes:pdf,mp4,avi,docx,txt|max:10240', // Máx. 10MB
+            'archivo' => 'file|mimes:pdf,mp4,avi,docx,txt|max:10240',
         ]);
-
-
-        // Subir el archivo
         $archivoPath = $request->file('archivo')->store('materiales', 'public'); // Almacena en /storage/app/public/materiales
 
         contenidos::create([
@@ -73,17 +66,12 @@ class Create_workerController extends Controller
             'material' => $request->input('material'),
             'archivo' => $archivoPath,
         ]);
-
-        // Redirigir a la vista index con un mensaje de éxito
         return redirect()->back()->with('success', 'Contenido creado exitosamente.');
     }
-
     public function crear_evaluaciones(Request $request)
     {
         $datos = $request->all();
         evaluaciones::create($datos);
-
-        // Redirigir a la vista index para mostrar nuevamente la lista actualizada
         return redirect()->route('create_worker.index');
     }
     public function crear_preguntas(Request $request)
@@ -98,8 +86,6 @@ class Create_workerController extends Controller
     {
         $datos = $request->all();
         crear_respuestas::create($datos);
-
-        // Redirigir a la vista index para mostrar nuevamente la lista actualizada
         return redirect()->route('create_worker.index');
     }
     public function respuestas(Request $request)
@@ -108,12 +94,12 @@ class Create_workerController extends Controller
             'id_trabajador' => 'required|exists:trabajadores,id_trabajador',
             'id_evaluacion' => 'required|exists:evaluaciones,id_evaluacion',
             'respuesta' => 'required|array',
-            'respuesta.*' => 'exists:crear_respuestas,id_c_respuesta',
         ]);
 
+
+        $respuestas = $request->input('respuesta');
         $idTrabajador = $request->input('id_trabajador');
         $idEvaluacion = $request->input('id_evaluacion');
-        $respuestas = $request->input('respuesta');
 
         $intentoActual = respuestas::where('id_trabajador', $idTrabajador)
             ->where('id_evaluacion', $idEvaluacion)
@@ -130,25 +116,84 @@ class Create_workerController extends Controller
 
         $nuevoIntento = $intentoActual ? $intentoActual + 1 : 1;
 
-        foreach ($respuestas as $idPregunta => $idRespuesta) {
-            $respuestaSeleccionada = crear_respuestas::find($idRespuesta);
+        DB::beginTransaction();
 
-            if ($respuestaSeleccionada) {
-                $validacion = $respuestaSeleccionada->validacion ?? false;
+        try {
+            foreach ($respuestas as $idPregunta => $idRespuesta) {
+                $respuestaSeleccionada = crear_respuestas::find($idRespuesta);
 
-                respuestas::create([
+                if (!$respuestaSeleccionada) {
+                    throw new \Exception("Respuesta no válida para la pregunta $idPregunta.");
+                }
+
+                Respuestas::create([
                     'id_trabajador' => $idTrabajador,
                     'id_evaluacion' => $idEvaluacion,
                     'id_c_pregunta' => $idPregunta,
                     'id_c_respuesta' => $idRespuesta,
-                    'es_correcta' => $validacion,
+                    'es_correcta' => $respuestaSeleccionada->validacion ?? false,
                     'intento' => $nuevoIntento,
                 ]);
             }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Respuestas guardadas correctamente.'
+            ], 200);
+
+        } catch (\Exception $e) {
+            
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Ocurrió un error al guardar las respuestas: ' . $e->getMessage()
+            ], 500);
         }
 
-        return response()->json(['success' => true])
-            ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
+
+
+        // $id_c_respuesta = $request->id_c_respuesta;
+
+        // $respuesta_seleccionada = crear_respuestas::find($id_c_respuesta);
+        // if ($respuesta_seleccionada) {
+
+        //     $validacion = $respuesta_seleccionada->validacion ?? false;
+        //     $datos = $intentosRealizados = respuestas::where('id_trabajador', $request->input('id_trabajador'))
+        //         ->where('id_evaluacion', $request->input('id_evaluacion'))
+        //         ->count();
+
+        //     $evaluacion = evaluaciones::find($request->input('id_evaluacion'));
+        //     // Verificar si se excedió el límite de intentos
+        //     if ($intentosRealizados >= $evaluacion->limite_intentos) {
+        //         return redirect()->back()->with('error', 'Ya no tienes intentos disponibles para esta evaluación.');
+        //     }
+        //     // dd([
+        //     //     'id_trabajador' => $request->id_trabajador,
+        //     //     'id_c_pregunta' => $request->id_c_pregunta,
+        //     //     'id_c_respuesta' => $id_c_respuesta,
+        //     //     'es_correcta' => $validacion,
+        //     // ]);
+        //     respuestas::create([
+        //         'id_trabajador' => $request->id_trabajador,
+        //         'id_c_pregunta' => $request->id_c_pregunta,
+        //         'id_c_respuesta' => $id_c_respuesta,
+        //         'id_evaluacion' => $request->id_evaluacion,
+        //         'es_correcta' => $validacion,
+        //         'intento' => $intentosRealizados + 1,
+        //     ]);
+        //     return response()->json([
+        //         'success' => true,
+        //         'message' => 'Respuesta guardada exitosamente.'
+        //     ]);
+        // } else {
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'La respuesta seleccionada no es válida.'
+        //     ], 400); 
+        // }
     }
 
     public function getContenidos($id)
@@ -242,7 +287,7 @@ class Create_workerController extends Controller
     {
         $intentoActual = respuestas::where('id_trabajador', $id_trabajador)
             ->where('id_evaluacion', $id_evaluacion)
-            ->max('intento');  // Obtener el máximo intento realizado
+            ->max('intento');
 
         $evaluacion = evaluaciones::find($id_evaluacion);
 

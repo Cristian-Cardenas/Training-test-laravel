@@ -18,6 +18,9 @@ Route::post('/create_worker/crear_preguntas', [Create_workerController::class, '
 Route::post('/create_worker/crear_respuestas', [Create_workerController::class, 'crear_respuestas'])->name('crear_respuestas');
 Route::post('/create_worker/respuestas', [Create_workerController::class, 'respuestas'])->name('respuestas');
 // Route::get('/create_worker/contenidos', [Create_workerController::class, 'contenidos'])->name('contenidos');
+
+
+Route::get('/create_worker/getRespuestas', [Create_workerController::class, 'getRespuestas'])->name('getRespuestas');
 Route::get('/create_worker/{id}/contenidos', [Create_workerController::class, 'getContenidos'])->name('create_worker.getContenidos');
 Route::get('/create_worker/{id}/evaluaciones', [Create_workerController::class, 'getEvaluaciones'])->name('create_worker.getEvaluaciones');
 Route::get('/create_worker/{id}/crear_preguntas', [Create_workerController::class, 'get_id_c_pregunta'])->name('create_worker.get_id_c_pregunta');
@@ -25,10 +28,10 @@ Route::get('/create_worker/{id}/crear_respuestas', [Create_workerController::cla
 Route::get('/create_worker/{id}/trabajadores', [Create_workerController::class, 'get_id_trabajador'])->name('create_worker.get_id_trabajador');
 Route::get('/create_worker/{id}/evaluaciones2', [Create_workerController::class, 'get_id_evaluacion'])->name('create_worker.get_id_evaluacion');
 Route::get('/create_worker/{id}/pregunta', [Create_workerController::class, 'get_id_pregunta'])->name('create_worker.get_id_pregunta');
-Route::get('/create_worker/{id}/preguntas', [Create_workerController::class, 'getPreguntas']);
+Route::get('/create_worker/{id}/preguntas', [Create_workerController::class, 'getPreguntas'])->name('create_worker.getPreguntas');
 
 
-Route::get('/create_worker/{id_trabajador}/{id_evaluacion}', [Create_workerController::class, 'verificarIntentos']);
+Route::get('/create_worker/{id_trabajador}/{id_evaluacion}', [Create_workerController::class, 'verificarIntentos'])->name('create_worker.verificarIntentos');
 
 
 
