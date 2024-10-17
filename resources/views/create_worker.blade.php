@@ -391,6 +391,7 @@
 
             </div>
             <div class="tab-pane fade" id="tab7" role="tabpanel" aria-labelledby="tab7-tab">
+                <div id="responseMessage"></div>
                 <div class="d-flex container">
                     <form id="respuestaForm" class="m-5 col" action="{{ route('respuestas') }}" method="POST">
                         {{ csrf_field() }}
@@ -419,7 +420,6 @@
 
                         <button type="submit" class="btn btn-primary">Guardar</button>
                     </form>
-                    <div id="responseMessage" style="margin-top:10px;"></div>
                     <div class="mt-5 col">
                         <h2 class="mb-4">Lista de Respuestas</h2>
                         @if (isset($respuestas) && $respuestas)
@@ -483,7 +483,7 @@
                                             <td>{{ $respuesta->evaluacion->contenido->curso->titulo_curso ?? 'Sin curso' }}
                                             </td>
                                             {{-- <td>{{ $respuesta->pregunta->pregunta ?? 'Sin nota' }}</td> --}}
-                                            {{-- <td>{{ $respuesta->respuesta->c_respuesta ?? 'Sin fecgha' }}</td> --}}
+                                            <td>{{ $respuesta->respuesta->created_at ?? 'Sin fecha' }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -714,6 +714,7 @@
             document.getElementById('respuestaBody').innerHTML = '';
         }
     });
+    //Respuestas de trabajador
     document.addEventListener('DOMContentLoaded', function() {
         const trabajadorSelect = document.getElementById('trabajadorSelect');
         const evaluacionSelect = document.getElementById('evaluacionSelectWork');
@@ -785,7 +786,7 @@
             const responseMessage = document.getElementById('responseMessage');
 
             document.getElementById('respuestaForm').addEventListener('submit', function(e) {
-                e.preventDefault(); 
+                e.preventDefault();
 
                 const formData = new FormData(this);
 
@@ -803,17 +804,17 @@
                         if (data.success) {
                             const tab = new bootstrap.Tab(document.querySelector('#tab7-tab'));
                             tab.show();
-                            responseMessage.innerHTML = data.message; 
+                            responseMessage.innerHTML = data.message;
                             responseMessage.classList.remove(
-                            'alert-danger'); 
+                                'alert-danger');
                             responseMessage.classList.add('alert',
-                            'alert-success');
+                                'alert-success');
                         } else {
                             responseMessage.innerHTML = data.error || 'Ocurrió un error.';
                             responseMessage.classList.remove(
-                            'alert-success'); 
+                                'alert-success');
                             responseMessage.classList.add('alert',
-                            'alert-danger'); 
+                                'alert-danger');
                         }
 
                         responseMessage.style.display = 'block';
@@ -822,9 +823,9 @@
                         console.error('Error:', error);
                         responseMessage.innerHTML = 'Ocurrió un error al enviar el formulario.';
                         responseMessage.classList.remove(
-                        'alert-success'); // Eliminar clase de éxito si existe
+                            'alert-success'); // Eliminar clase de éxito si existe
                         responseMessage.classList.add('alert',
-                        'alert-danger'); // Añadir clase de error
+                            'alert-danger'); // Añadir clase de error
                         responseMessage.style.display = 'block'; // Mostrar el div
                     });
             });
@@ -832,6 +833,7 @@
             console.error('CSRF token no encontrado en el meta.');
         }
     });
+    // --------*------------*------------
 </script>
 
 

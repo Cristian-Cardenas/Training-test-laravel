@@ -95,6 +95,7 @@ class Create_workerController extends Controller
             'id_evaluacion' => 'required|exists:evaluaciones,id_evaluacion',
             'respuesta' => 'required|array',
         ]);
+        dd($datos);
 
 
         $respuestas = $request->input('respuesta');
